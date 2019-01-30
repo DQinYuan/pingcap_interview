@@ -70,7 +70,7 @@ You can use your favorite language, but we prefer C/C++, Rust, Go, or Python.
 
 
 
-![initRun](img/initRun.png)
+![initRun](img/initrun.png)
 
 
 
