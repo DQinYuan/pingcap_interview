@@ -32,6 +32,26 @@ public class MockData {
         }
     }
 
+    @Test
+    public void file10G() throws IOException {
+        int G = 1024 * 1024 * 1024;
+        int GNum = 10;
+        Path path10G = Paths.get("temp", "G10.dat");
+        FileChannel channel =
+                FileChannel.open(path10G, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+        byte[] bytes = new byte[G];
+
+        for ( int i = 0; i < bytes.length; i++ ){
+            bytes[i] = (byte) (i % 100);
+        }
+
+        for ( int i = 0; i < GNum; i++ ){
+            channel.write(ByteBuffer.wrap(bytes));
+        }
+
+        channel.close();
+    }
+
     @Ignore
     @Test
     public void userItemAndPrice() throws IOException {
