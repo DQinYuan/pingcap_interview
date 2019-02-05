@@ -33,3 +33,7 @@ tmp-1.dat
 tmp-2.dat
 
 user_order.dat
+
+.idea
+
+*.iml
