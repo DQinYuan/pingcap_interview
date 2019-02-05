@@ -4,8 +4,6 @@
 
 # 题目
 
----
-
 
 
 Calculate how much money each user has spent efficiently
@@ -31,8 +29,6 @@ You can use your favorite language, but we prefer C/C++, Rust, Go, or Python.
 
 # 总体思路
 
----
-
 
 
 输入：user.dat(user_id和item_id两个字段), item.dat(item_id和price两个字段)，文件大小都远大于内存
@@ -56,13 +52,9 @@ You can use your favorite language, but we prefer C/C++, Rust, Go, or Python.
 
 # 魔鬼在细节
 
----
-
 
 
 ## 外部排序
-
----
 
 
 
@@ -155,8 +147,6 @@ You can use your favorite language, but we prefer C/C++, Rust, Go, or Python.
 
 ## Hash
 
----
-
 
 
 ![hash](img/hash.png)
@@ -174,8 +164,6 @@ item的数据都被hash到了item_hash.dat文件中，按负载因子0.75算的�
 
 
 ## 汇总
-
----
 
 
 
