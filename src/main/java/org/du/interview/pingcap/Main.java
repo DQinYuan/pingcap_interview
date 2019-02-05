@@ -25,7 +25,8 @@ public class Main {
 
         switch (option) {
             case "mockdata":
-                Mock.mock(Paths.get(System.getProperty("path")));
+                Mock.mock(Paths.get(System.getProperty("path")),
+                        Integer.parseInt(System.getProperty("num")));
                 break;
             case "run":
                 groupByAndSum(Paths.get(System.getProperty("user")),
@@ -44,6 +45,14 @@ public class Main {
     }
 
 
+    /**
+     *
+     * @param user user表数据文件的位置
+     * @param item item表数据文件的位置
+     * @param out  结果文件的摆放路径
+     * @param tempDir 用于存放过程中产生的临时文件的文件夹路径
+     * @param recordLen   表中每条记录的长度
+     */
     public static void groupByAndSum(Path user, Path item, Path out,
                                      Path tempDir, int recordLen) {
 

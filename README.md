@@ -52,7 +52,7 @@ You can use your favorite language, but we prefer C/C++, Rust, Go, or Python.
 - 总计遍历3遍user.dat，1遍item.dat
 - 尽可能地采用顺序读写
 
-
+方案的代码位于：org.du.interview.pingcap.Main.groupByAndSum
 
 # 魔鬼在细节
 

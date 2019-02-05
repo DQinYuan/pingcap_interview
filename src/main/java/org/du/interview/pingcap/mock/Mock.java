@@ -33,11 +33,16 @@ public class Mock {
         }
     }
 
-    public static void mock(Path mockPath){
+    /**
+     * user表记录数: num * 4
+     * item表记录数: num + 3
+     * @param mockPath 测试数据摆放的路径
+     * @param num 测试数据生成的用户数目
+     */
+    public static void mock(Path mockPath, int num){
 
         EPathUtil.createIfNotExist(mockPath);
 
-        int num = 256;
         int dup = 4;
         int detailNum = num * dup;
         Trade[] trades = new Trade[detailNum];

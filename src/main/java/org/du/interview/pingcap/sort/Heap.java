@@ -1,5 +1,7 @@
 package org.du.interview.pingcap.sort;
 
+import org.du.interview.pingcap.util.BigByteBuffer;
+
 import java.nio.ByteBuffer;
 import java.util.function.Consumer;
 
@@ -8,23 +10,23 @@ import java.util.function.Consumer;
  */
 public class Heap {
 
-    private ByteBuffer content;
+    private BigByteBuffer content;
 
-    //一条记录的字节数
-    private final int recordLen;
+    //一条记录的字节数,int类型,虽然这里给了一个long
+    private final long recordLen;
 
     //堆的总大小
-    private int capacity;
+    private long capacity;
 
     private LongComparator comparator;
 
-    private int originCapacity;
+    private long originCapacity;
 
-    public Heap(ByteBuffer content, int recordLen, LongComparator comparator) {
+    public Heap(BigByteBuffer content, int recordLen, LongComparator comparator) {
         this.content = content;
         this.comparator = comparator;
         this.recordLen = recordLen;
-        this.capacity = content.limit() / recordLen;
+        this.capacity = content.getSize() / recordLen;
         this.originCapacity = capacity;
         init();
     }
@@ -34,50 +36,41 @@ public class Heap {
         init();
     }
 
-    private long getRecordLongKey(int index) {
-        content.clear();
+    private long getRecordLongKey(long index) {
         return content.getLong(index * recordLen);
     }
 
-    private ByteBuffer getRecordBuffer(int index) {
-        int start = index * recordLen;
-        content.limit(start + recordLen);
-        content.position(start);
-        return content.slice();
+    private ByteBuffer getRecordBuffer(long index) {
+        long start = index * recordLen;
+        return content.wrapInByteBuffer(start, (int) recordLen);
     }
 
-    private byte[] getRecordBytes(int index) {
-        byte[] bytes = new byte[recordLen];
-        int start = index * recordLen;
-        content.position(start);
-        content.limit(start + recordLen);
-        content.get(bytes);
-        return bytes;
+    private byte[] getRecordBytes(long index) {
+        long start = index * recordLen;
+        return content.getBytes(start, (int) recordLen);
     }
 
-    private void setRecord(int index, ByteBuffer record) {
-        content.position(index * recordLen);
-        content.put(record);
+    private void setRecord(long index, ByteBuffer record) {
+        content.setByteBuffer(index * recordLen, record);
     }
 
-    private void setRecord(int index, byte[] record) {
-        content.position(index * recordLen);
-        content.put(record);
+    private void setRecord(long index, byte[] record) {
+        content.setBytes(index * recordLen, record);
     }
 
-    private void heapAdjust(int parent) {
-        int originParent = parent;
+    private void heapAdjust(long parent) {
+        long originParent = parent;
         long temp = getRecordLongKey(parent);
         byte[] tempBytes = getRecordBytes(parent);
 
-        int child = 2 * parent + 1; // 先获得左孩子
+        long child = 2L * parent + 1L; // 先获得左孩子
 
         while (child < capacity) {
             long childKey = getRecordLongKey(child);
             long rightKey;
-            if (child + 1 < capacity &&
+            if (child + 1L < capacity &&
                     comparator.compare(childKey,
-                            (rightKey = getRecordLongKey(child + 1))) > 0) {
+                            (rightKey = getRecordLongKey(child + 1L))) > 0) {
                 child++;
                 childKey = rightKey;
             }
@@ -98,8 +91,7 @@ public class Heap {
     }
 
     public void setRoot(ByteBuffer root) {
-        content.position(0);
-        content.put(root);
+        content.setByteBuffer(0, root);
 
         heapAdjust(0);
     }
@@ -110,16 +102,14 @@ public class Heap {
      * @return
      */
     public ByteBuffer getRoot() {
-        content.position(0);
-        content.limit(recordLen);
-        return content.slice();
+        return content.wrapInByteBuffer(0, (int) recordLen);
     }
 
     private void init() {
-        if ( capacity == 0 ){
+        if (capacity == 0) {
             return;
         }
-        for (int i = (capacity - 1) / 2; i >= 0; i--) {
+        for (long i = (capacity - 1) / 2; i >= 0; i--) {
             heapAdjust(i);
         }
     }
@@ -130,43 +120,37 @@ public class Heap {
      * @param consumer
      * @return 剩余的无法在此轮进行排序的元素
      */
-    public ByteBuffer forEach(Consumer<ByteBuffer> consumer) {
+    public BigByteBuffer forEach(Consumer<ByteBuffer> consumer) {
 
-        content.limit(originCapacity * recordLen);
-        content.position(capacity * recordLen);
-        ByteBuffer rest = content.slice();
+        long originalSize = originCapacity * recordLen;
+        long currSize = capacity * recordLen;
+        BigByteBuffer rest = content.slice(currSize, originalSize - currSize);
 
-        if ( capacity != 0 ){
+        if (capacity != 0) {
             consumer.accept(getRoot());
         }
 
-        while (shrink(null) != 0){
+        while (shrink(null) != 0) {
             consumer.accept(getRoot());
         }
 
         return rest;
     }
 
-    private void swap(int index0, int index1) {
-        byte[] temp = getRecordBytes(index0);
-        setRecord(index0, getRecordBuffer(index1));
-        setRecord(index1, temp);
-    }
-
-    public int shrink(ByteBuffer newRecord) {
-        if( capacity == 0 ){
+    public long shrink(ByteBuffer newRecord) {
+        if (capacity == 0) {
             return 0;
         }
 
         capacity -= 1;
 
-        swap(0, capacity);
+        //把最后一个元素赋给第一个元素,因为第一个元素(根元素)刚刚已经被写入写缓冲了
+        setRecord(0, getRecordBuffer(capacity));
         heapAdjust(0);
 
         if (newRecord != null) {
-            content.clear();
-            content.position(capacity * recordLen);
-            content.put(newRecord);
+            //将新记录给最后一个元素
+            setRecord(capacity, newRecord);
         }
         return capacity;
     }
@@ -184,6 +168,16 @@ public class Heap {
             sb.append(byteBuffer.getLong());
             sb.append("],");
         }
+/*        long pos = 0;
+        for (int i = 0; i < capacity; i++) {
+            sb.append("[");
+            sb.append(content.getLong(pos))
+                    .append(",");
+            pos += 8;
+            sb.append(content.getLong(pos));
+            pos += 8;
+            sb.append("],");
+        }*/
         sb.append("]");
 
         return sb.toString();

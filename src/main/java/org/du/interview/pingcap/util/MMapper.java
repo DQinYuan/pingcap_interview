@@ -1,16 +1,12 @@
 package org.du.interview.pingcap.util;
 
+import sun.misc.Unsafe;
+import sun.nio.ch.FileChannelImpl;
+
 import java.io.RandomAccessFile;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.channels.FileChannel;
 
-import sun.nio.ch.FileChannelImpl;
-import sun.misc.Unsafe;
-
-/**
- * ToDo:仿照其实现一个长度无限制的DirectByteBuffer
- */
 @SuppressWarnings("restriction")
 public class MMapper {
 
@@ -24,25 +20,16 @@ public class MMapper {
 
     static {
         try {
-            Field singleoneInstanceField = Unsafe.class.getDeclaredField("theUnsafe");
-            singleoneInstanceField.setAccessible(true);
-            unsafe = (Unsafe) singleoneInstanceField.get(null);
+            unsafe = MyUnsafe.UNSAFE;
 
-            mmap = getMethod(FileChannelImpl.class, "map0", int.class, long.class, long.class);
-            unmmap = getMethod(FileChannelImpl.class, "unmap0", long.class, long.class);
+            mmap = ReflectiveUtil.getMethod(FileChannelImpl.class, "map0", int.class, long.class, long.class);
+            unmmap = ReflectiveUtil.getMethod(FileChannelImpl.class, "unmap0", long.class, long.class);
 
             //16  byte数组的初始偏移 12B对象头 + 4B的长度
             BYTE_ARRAY_OFFSET = unsafe.arrayBaseOffset(byte[].class);
         } catch (Exception e){
             throw new RuntimeException(e);
         }
-    }
-
-    //Bundle reflection calls to get access to the given method
-    private static Method getMethod(Class<?> cls, String name, Class<?>... params) throws Exception {
-        Method m = cls.getDeclaredMethod(name, params);
-        m.setAccessible(true);
-        return m;
     }
 
     //Round to next 4096 bytes
@@ -54,7 +41,7 @@ public class MMapper {
     //for the given length and set this.addr to the returned offset
     private void mapAndSetOffset() throws Exception{
         final RandomAccessFile backingFile = new RandomAccessFile(this.loc, "rw");
-        backingFile.setLength(this.size);
+        //backingFile.setLength(this.size);
 
         final FileChannel ch = backingFile.getChannel();
         this.addr = (long) mmap.invoke(ch, 1, 0L, this.size);
@@ -63,46 +50,43 @@ public class MMapper {
         backingFile.close();
     }
 
-    public MMapper(final String loc, long len) throws Exception {
+    public MMapper(final String loc, int len) throws Exception {
         this.loc = loc;
         this.size = roundTo4096(len);
         mapAndSetOffset();
     }
 
-    //Callers should synchronize to avoid calls in the middle of this, but
-    //it is undesirable to synchronize w/ all access methods.
-    public void remap(long nLen) throws Exception{
+    //需要进行同步,这里
+    public void unmap() throws Exception{
         unmmap.invoke(null, addr, this.size);
-        this.size = roundTo4096(nLen);
-        mapAndSetOffset();
     }
 
-    public int getInt(long pos){
+    public int getInt(int pos){
         return unsafe.getInt(pos + addr);
     }
 
-    public long getLong(long pos){
+    public long getLong(int pos){
         return unsafe.getLong(pos + addr);
     }
 
-    public byte getByte(long pos){
+    public byte getByte(int pos){
         return unsafe.getByte(pos + addr);
     }
 
-    public void putInt(long pos, int val){
+    public void putInt(int pos, int val){
         unsafe.putInt(pos + addr, val);
     }
 
-    public void putLong(long pos, long val){
+    public void putLong(int pos, long val){
         unsafe.putLong(pos + addr, val);
     }
 
     //May want to have offset & length within data as well, for both of these
-    public void getBytes(long pos, byte[] data){
+    public void getBytes(int pos, byte[] data){
         unsafe.copyMemory(null, pos + addr, data, BYTE_ARRAY_OFFSET, data.length);
     }
 
-    public void setBytes(long pos, byte[] data){
+    public void setBytes(int pos, byte[] data){
         unsafe.copyMemory(data, BYTE_ARRAY_OFFSET, null, pos + addr, data.length);
     }
 }

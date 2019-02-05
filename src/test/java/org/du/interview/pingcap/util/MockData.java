@@ -35,8 +35,8 @@ public class MockData {
     @Test
     public void file10G() throws IOException {
         int G = 1024 * 1024 * 1024;
-        int GNum = 10;
-        Path path10G = Paths.get("temp", "G10.dat");
+        int GNum = 2;
+        Path path10G = Paths.get("temp", "G2.dat");
         FileChannel channel =
                 FileChannel.open(path10G, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         byte[] bytes = new byte[G];

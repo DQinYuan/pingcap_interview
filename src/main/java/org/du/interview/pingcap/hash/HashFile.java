@@ -1,74 +1,89 @@
 package org.du.interview.pingcap.hash;
 
+import org.du.interview.pingcap.util.BigMmap;
+
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
+import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 
 public class HashFile {
 
-    private final FileChannel channel;
+    private final BigMmap mmap;
 
-    private final MappedByteBuffer mmap;
-
-    private final int capacity;
+    private final long capacity;
 
     //每条记录的长度
-    private final int recordLen;
+    private final long recordLen;
     //包含标志位的每条记录长度
-    private final int realLen;
+    private final long realLen;
 
     private static final double LOAD_FACTOR = 0.75;
 
-    public HashFile(Path path, int expectSize, int recordLen) {
+    /**
+     *
+     * @param path
+     * @param expectSize  期望存放的记录数目
+     * @param recordLen
+     */
+    public HashFile(Path path, long expectSize, int recordLen) {
         try {
-            this.channel = FileChannel.open(path, StandardOpenOption.WRITE, StandardOpenOption.READ,
-                    StandardOpenOption.CREATE);
-            this.capacity = (int) (expectSize / LOAD_FACTOR);
+            if (Files.exists(path)){
+                Files.delete(path);
+            }
+
+            this.capacity = (long) (expectSize / LOAD_FACTOR);
             this.recordLen = recordLen;
             this.realLen = recordLen + 1;
 
-            this.mmap = channel.map(FileChannel.MapMode.READ_WRITE,
-                    0, this.capacity * realLen);
+            RandomAccessFile raf= new RandomAccessFile(path.toFile(), "rw");
+            raf.setLength(this.capacity * realLen);
+
+            FileChannel channel = raf.getChannel();
+            this.mmap = new BigMmap(channel, FileChannel.MapMode.READ_WRITE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private int inc(int i) {
+    private long inc(long i) {
         return ++i == capacity ? 0 : i;
     }
 
-    private boolean exists(int index) {
-        byte flag = mmap.get(index * realLen);
+    private boolean exists(long pos) {
+        byte flag = mmap.getByte(pos * realLen);
         return flag == 1;
     }
 
     public void put(long key, long value) {
-        int index = (int) (key % capacity);
+        long index = key % capacity;
         while (exists(index)) {
             index = inc(index);
         }
 
-        int start = index * realLen;
-        mmap.put(start, (byte) 1);
-        mmap.putLong(start + 1, key);
-        mmap.putLong(start + 9, value);
+        long start = index * realLen;
+        mmap.setByte(start, (byte) 1);
+        mmap.setLong(start + 1, key);
+        mmap.setLong(start + 9, value);
     }
 
-
-    private long getKey(int index){
+    private long getKey(long index){
         return mmap.getLong(index * realLen + 1);
     }
 
-    private long getValue(int index){
+    private long getValue(long index){
         return mmap.getLong(index * realLen + 9);
     }
 
 
+    /**
+     * 这里的实现默认key是一定存在的
+     * @param key
+     * @return
+     */
     public long get(long key){
-        int index = (int) (key % capacity);
+        long index = key % capacity;
         while (getKey(index) != key){
             index = inc(index);
         }

@@ -1,6 +1,8 @@
 package org.du.interview.pingcap.sort;
 
 import org.du.interview.pingcap.Config;
+import org.du.interview.pingcap.util.BigByteBuffer;
+import org.du.interview.pingcap.util.FastDirectByteBuffer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -30,12 +32,12 @@ public class ReadBuffer {
         }
     }
 
-    public void read(ByteBuffer capacity){
-        try {
-            channel.read(capacity);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    /**
+     * 这里的实现作了一个妥协: fileChannel必须至少能填满该buffer
+     * @param contentBuffer
+     */
+    public void read(BigByteBuffer contentBuffer){
+        contentBuffer.fillFromFileChannel(channel);
     }
 
 

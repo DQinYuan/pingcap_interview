@@ -1,6 +1,7 @@
 package org.du.interview.pingcap.sort;
 
 import org.du.interview.pingcap.Config;
+import org.du.interview.pingcap.util.BigByteBuffer;
 import org.du.interview.pingcap.util.EPathUtil;
 
 import java.nio.ByteBuffer;
@@ -26,11 +27,10 @@ public class ESort {
         ReadBuffer readBuffer = new ReadBuffer(in);
         int num = 0;
         WriteBuffer writeBuffer = new WriteBuffer(EPathUtil.createTmpPath(num, temp));
-        ByteBuffer content = ByteBuffer.allocateDirect(Config.CONTENT_SIZE);
+        BigByteBuffer content = new BigByteBuffer(Config.CONTENT_SIZE);
 
         //读取一个block并构建堆
         readBuffer.read(content);
-        content.flip();
         Heap heap = new Heap(content, recordLen, longComparator);
 
         ByteBuffer next;
@@ -55,7 +55,7 @@ public class ESort {
         }
 
         //处理堆中剩余元素
-        ByteBuffer rest = heap.forEach(writeBuffer::write);
+        BigByteBuffer rest = heap.forEach(writeBuffer::write);
 
         num++;
         writeBuffer.flushAndClose();
@@ -63,6 +63,9 @@ public class ESort {
         writeBuffer = new WriteBuffer(EPathUtil.createTmpPath(num, temp));
         new Heap(rest, recordLen, longComparator).forEach(writeBuffer::write);
         writeBuffer.flushAndClose();
+
+        //释放内存
+        content.free();
     }
 
 
