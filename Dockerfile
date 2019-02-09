@@ -1,5 +1,5 @@
 # Builder container
-FROM openjdk:8u191-jdk-alpine3.9 AS builder
+FROM openjdk:8-jre-alpine AS builder
 
 RUN mkdir -p /root/workspace
 
@@ -11,7 +11,7 @@ COPY ./docker-entrypoint.sh ./
 
 RUN chmod 777 ./docker-entrypoint.sh
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
 
 # --cpus 4    CPU core nums
 # -m 4g     limit memory

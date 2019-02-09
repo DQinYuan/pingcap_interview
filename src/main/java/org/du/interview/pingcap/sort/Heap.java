@@ -122,9 +122,15 @@ public class Heap {
      */
     public BigByteBuffer forEach(Consumer<ByteBuffer> consumer) {
 
-        long originalSize = originCapacity * recordLen;
-        long currSize = capacity * recordLen;
-        BigByteBuffer rest = content.slice(currSize, originalSize - currSize);
+        BigByteBuffer rest = null;
+
+        if (capacity != originCapacity){
+            long originalSize = originCapacity * recordLen;
+            long currSize = capacity * recordLen;
+            rest = content.slice(currSize, originalSize - currSize);
+        }
+
+
 
         if (capacity != 0) {
             consumer.accept(getRoot());

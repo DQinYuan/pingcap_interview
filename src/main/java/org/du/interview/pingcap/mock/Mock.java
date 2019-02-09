@@ -44,8 +44,9 @@ public class Mock {
      *
      * @param mockPath 测试数据摆放的路径
      * @param num      测试数据生成的用户数目
+     * @param isSuffle  是否打乱顺序
      */
-    public static void mock(Path mockPath, int num) {
+    public static void mock(Path mockPath, int num, boolean isSuffle) {
 
         EPathUtil.createIfNotExist(mockPath);
 
@@ -70,18 +71,18 @@ public class Mock {
             //user表落盘
             for (int i = 0; i < num; i++) {
                 for (int j = 0; j < dup; j++) {
-                    writeInByteBuffer(i * dup + j, userChannel, byteBuffers, i, i + j, tempBuffer);
+                    writeInByteBuffer(i * dup + j, userChannel, byteBuffers, i, i + j, tempBuffer, isSuffle);
                 }
             }
 
-            writeAll(userChannel, byteBuffers, tempBuffer);
+            writeAll(userChannel, byteBuffers, tempBuffer, isSuffle);
 
 
             for (int i = 0; i < detailNum; i++) {
-                writeInByteBuffer(i, itemChannel, byteBuffers, i, i - 1, tempBuffer);
+                writeInByteBuffer(i, itemChannel, byteBuffers, i, i - 1, tempBuffer, isSuffle);
             }
 
-            writeAll(itemChannel, byteBuffers, tempBuffer);
+            writeAll(itemChannel, byteBuffers, tempBuffer, isSuffle);
         } catch (IOException e) {
             throw new RuntimeException("mock数据伪造失败");
         }
@@ -92,18 +93,20 @@ public class Mock {
     }
 
     private static void writeInByteBuffer(int pos, FileChannel channel, ByteBuffer[] byteBuffers,
-                                          long key, long value, ByteBuffer tempBuffer) throws IOException {
+                                          long key, long value, ByteBuffer tempBuffer, boolean isSuffle) throws IOException {
         int index = pos % byteBuffers.length;
         if (pos != 0 && index == 0){
-            writeAll(channel, byteBuffers, tempBuffer);
+            writeAll(channel, byteBuffers, tempBuffer, isSuffle);
         }
         byteBuffers[index].putLong(key);
         byteBuffers[index].putLong(value);
     }
 
     private static void writeAll(FileChannel channel, ByteBuffer[] byteBuffers
-        , ByteBuffer tempBuffer) throws IOException {
-        ArrayUtils.shuffle(byteBuffers);
+        , ByteBuffer tempBuffer, boolean isSuffle) throws IOException {
+
+        if(isSuffle) ArrayUtils.shuffle(byteBuffers);
+
         tempBuffer.clear();
         for (ByteBuffer byteBuffer : byteBuffers) {
             byteBuffer.flip();

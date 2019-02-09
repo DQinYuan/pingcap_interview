@@ -133,7 +133,7 @@ public class MockData {
 
     @Test
     public void showContent() throws IOException {
-        decodeFile(Paths.get("data", "out.dat"));
+        decodeFile(Paths.get("temp", "tmp-0.dat"));
         //decodeFile(Paths.get("data", "origin.dat"));
     }
 

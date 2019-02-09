@@ -26,7 +26,7 @@ public class Main {
         switch (option) {
             case "mockdata":
                 Mock.mock(Paths.get(System.getProperty("path")),
-                        Integer.parseInt(System.getProperty("num")));
+                        Integer.parseInt(System.getProperty("num")), true);
                 break;
             case "run":
                 long begin = System.currentTimeMillis();

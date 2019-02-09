@@ -60,9 +60,11 @@ public class ESort {
         num++;
         writeBuffer.flushAndClose();
         //System.out.println("file switch");
-        writeBuffer = new WriteBuffer(EPathUtil.createTmpPath(num, temp));
-        new Heap(rest, recordLen, longComparator).forEach(writeBuffer::write);
-        writeBuffer.flushAndClose();
+        if (rest != null){
+            writeBuffer = new WriteBuffer(EPathUtil.createTmpPath(num, temp));
+            new Heap(rest, recordLen, longComparator).forEach(writeBuffer::write);
+            writeBuffer.flushAndClose();
+        }
 
         //释放内存
         content.free();

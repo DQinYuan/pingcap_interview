@@ -213,6 +213,9 @@ public class BigByteBuffer {
     }
 
     public BigByteBuffer slice(long pos, long len) {
+        if (pos >= size){
+            throw new RuntimeException("pos不允许超过bigmmap的长度");
+        }
         return new BigByteBufferView(pos, len);
     }
 

@@ -10,7 +10,7 @@ public class MockTest {
     @Ignore
     @Test
     public void littleDataMockTest(){
-        Mock.mock(Paths.get("data"), 2056);
+        Mock.mock(Paths.get("data"), 2056, true);
     }
 
     /**
@@ -22,7 +22,13 @@ public class MockTest {
     @Ignore
     @Test
     public void mockBigData(){
-        Mock.mock(Paths.get("temp"), 16777216);
+        Mock.mock(Paths.get("temp"), 16777216, true);
+    }
+
+    @Ignore
+    @Test
+    public void mockNoSuffleData(){
+        Mock.mock(Paths.get("temp"), 16777216, false);
     }
 
 }

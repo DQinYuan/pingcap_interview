@@ -10,7 +10,7 @@ public class ESortTest {
     @Ignore
     @Test
     public void initRunTest(){
-        ESort.initRun(Paths.get("data", "origin.dat"),
+        ESort.initRun(Paths.get("temp", "user.dat"),
                 Paths.get("temp"), 16, (l1, l2) -> Long.compare(l1, l2));
     }
 
