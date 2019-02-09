@@ -100,7 +100,7 @@ public class Mmap {
 
         try {
             this.channel = channel == null ? FileChannel.open(this.loc, StandardOpenOption.WRITE,
-                    StandardOpenOption.READ) : channel;
+                    StandardOpenOption.READ, StandardOpenOption.TRUNCATE_EXISTING) : channel;
             this.realAddr = (long) mmap.invoke(channel, imode, mapPosition,
                     mapSize);
 

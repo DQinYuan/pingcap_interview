@@ -4,7 +4,7 @@ public interface Config {
 
     //测试4 * 1024
     //3G
-    long CONTENT_SIZE = 3 * 1024 * 1024 * 1024;
+    long CONTENT_SIZE = 3L * 1024L * 1024L * 1024L;
 
     int READ_BUFFER_SIZE = 4 * 1024;
 

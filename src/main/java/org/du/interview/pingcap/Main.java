@@ -14,11 +14,11 @@ import java.nio.file.Paths;
 public class Main {
 
     public static void main(String[] args) {
-        //要idea的 vm option上加-D参数才有效,可能是idea的bug
+        //vm option上加-D参数才有效
         //System.out.println(System.getProperty("path"));
 
         if ( args.length <= 0 ){
-            throw new RuntimeException("选项mockdata run或result未给,请至少给出一个");
+            throw new RuntimeException("选项mockdata,run或result未给,请至少给出一个");
         }
 
         String option = args[0];
@@ -29,10 +29,12 @@ public class Main {
                         Integer.parseInt(System.getProperty("num")));
                 break;
             case "run":
+                long begin = System.currentTimeMillis();
                 groupByAndSum(Paths.get(System.getProperty("user")),
                         Paths.get(System.getProperty("item")),
                         Paths.get(System.getProperty("out")),
                         Paths.get(System.getProperty("temp")), 16);
+                System.out.println("time used:" + (System.currentTimeMillis() - begin) + " ms");
                 break;
             case "show":
                 Decode.show(Paths.get(System.getProperty("path")));

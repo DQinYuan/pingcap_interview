@@ -29,15 +29,12 @@ public class HashFile {
      */
     public HashFile(Path path, long expectSize, int recordLen) {
         try {
-            if (Files.exists(path)){
-                Files.delete(path);
-            }
-
             this.capacity = (long) (expectSize / LOAD_FACTOR);
             this.recordLen = recordLen;
             this.realLen = recordLen + 1;
 
             RandomAccessFile raf= new RandomAccessFile(path.toFile(), "rw");
+            raf.setLength(0);
             raf.setLength(this.capacity * realLen);
 
             FileChannel channel = raf.getChannel();

@@ -25,7 +25,8 @@ public class WriteBuffer {
         if (block.limit() > 0) {
             try {
                 if (fileChannel == null) {
-                    fileChannel = FileChannel.open(filePath, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+                    fileChannel = FileChannel.open(filePath, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+                            StandardOpenOption.TRUNCATE_EXISTING);
                 }
 
                 fileChannel.write(block);

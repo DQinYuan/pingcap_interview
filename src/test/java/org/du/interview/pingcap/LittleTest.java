@@ -1,5 +1,6 @@
 package org.du.interview.pingcap;
 
+import org.du.interview.pingcap.util.Constant;
 import org.du.interview.pingcap.util.ReflectiveUtil;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -42,6 +43,7 @@ public class LittleTest {
         System.out.println(byteBuffer.remaining());
     }
 
+    @Ignore
     @Test
     public void pathTest(){
         Path path = Paths.get("data/item.dat");
@@ -55,6 +57,7 @@ public class LittleTest {
         System.out.println(path);
     }
 
+    @Ignore
     @Test
     public void mmaptest() throws IOException {
         Path path = Paths.get("temp", "G10.dat");
@@ -108,5 +111,66 @@ public class LittleTest {
         System.out.println(channel.size());
     }
 
+    @Test
+    public void maxInt(){
+        System.out.println(Integer.MAX_VALUE);
+    }
+
+    @Ignore
+    @Test
+    public void iopsTest() throws IOException {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect((int) Constant.G);
+
+        int gNum = 134217728;
+
+        for (int i = 0; i < gNum; i++){
+            byteBuffer.putLong(i);
+        }
+
+        byteBuffer.flip();
+        System.out.println("bybuffer filled:" + byteBuffer.limit());
+
+        FileChannel channel = FileChannel.open(Paths.get("temp", "iopstest.dat"),
+                StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+
+        long start = System.currentTimeMillis();
+        channel.write(byteBuffer);
+        System.out.println("1G write, time used:" + (System.currentTimeMillis() - start) + " ms");
+    }
+
+    @Ignore
+    @Test
+    public void channelTest() throws IOException {
+        /**
+         * FileChannel.open的特点是不会覆盖原文件,原文件没有被修改的地方该什么样还是什么样
+         *
+         * 加了StandardOpenOption.TRUNCATE_EXISTING即可实现文件覆盖
+         */
+        FileChannel channel = FileChannel.open(Paths.get("temp", "channeltest.dat"),
+                StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(8);
+        byteBuffer.put((byte) 'p');
+        byteBuffer.put((byte) 'b');
+        byteBuffer.put((byte) 'c');
+        byteBuffer.put((byte) 'd');
+        byteBuffer.flip();
+
+        channel.write(byteBuffer);
+
+        channel.close();
+    }
+
+    /**
+     * 使用ramdomAccessFile的write方法抑或从其中获得的channel也都不能覆盖文件
+     * @throws IOException
+     */
+    @Ignore
+    @Test
+    public void randomAccessFileChannelTest() throws IOException {
+        RandomAccessFile randomAccessFile = new RandomAccessFile("temp/channeltest.dat", "rw");
+        randomAccessFile.setLength(0);
+        randomAccessFile.setLength(8);
+        randomAccessFile.write(new byte[]{'m'});
+    }
 
 }

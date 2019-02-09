@@ -8,7 +8,7 @@ public class BigByteBuffer {
     private FastDirectByteBuffer[] byteBuffers;
     private long size;
 
-    private BigByteBuffer(){
+    private BigByteBuffer() {
 
     }
 
@@ -25,24 +25,27 @@ public class BigByteBuffer {
         }
 
         this.byteBuffers[byteBuffers.length - 1] = new FastDirectByteBuffer(
-                rest == 0? (int) Constant.G: rest
+                rest == 0 ? (int) Constant.G : rest
         );
     }
+
     /**
      * 逻辑位置pos位于的block编号
+     *
      * @param pos
      * @return
      */
-    protected int block(long pos){
+    protected int block(long pos) {
         return (int) (pos / Constant.G);
     }
 
     /**
      * 逻辑位置pos在block内的偏移
+     *
      * @param pos
      * @return
      */
-    protected int offset(long pos){
+    protected int offset(long pos) {
         return (int) (pos % Constant.G);
     }
 
@@ -70,7 +73,7 @@ public class BigByteBuffer {
         int offsetEnd = offset(end);
 
         //位于同block的情况
-        if ( blockStart == blockEnd ){
+        if (blockStart == blockEnd) {
             return byteBuffers[blockStart].getBytes(dst, 0, offsetStart, len);
         }
 
@@ -81,7 +84,7 @@ public class BigByteBuffer {
         byteBuffers[blockStart].getBytes(dst, byteStart, offsetStart, startLen);
         byteStart += startLen;
 
-        for ( int i = blockStart + 1; i <= blockEnd - 1; i++ ){
+        for (int i = blockStart + 1; i <= blockEnd - 1; i++) {
             byteBuffers[i].getBytes(dst, byteStart, 0, (int) Constant.G);
             byteStart += Constant.G;
         }
@@ -103,10 +106,11 @@ public class BigByteBuffer {
 
     /**
      * 该方法不会移动文件指针
+     *
      * @param channel
      * @param filePosition
      */
-    public void fillFromFileChannel(FileChannel channel, long filePosition){
+    public void fillFromFileChannel(FileChannel channel, long filePosition) {
         for (FastDirectByteBuffer byteBuffer : byteBuffers) {
             byteBuffer.fillFromFileChannel(channel, filePosition);
             filePosition += byteBuffer.getSize();
@@ -115,9 +119,10 @@ public class BigByteBuffer {
 
     /**
      * 该方法会移动文件指针
+     *
      * @param channel
      */
-    public void fillFromFileChannel(FileChannel channel){
+    public void fillFromFileChannel(FileChannel channel) {
         for (FastDirectByteBuffer byteBuffer : byteBuffers) {
             byteBuffer.fillFromFileChannel(channel);
         }
@@ -125,10 +130,11 @@ public class BigByteBuffer {
 
     /**
      * 支持跨block
+     *
      * @param pos
      * @param src
      */
-    public void setBytes(long pos, byte[] src){
+    public void setBytes(long pos, byte[] src) {
         long start = pos;
         long end = start + src.length - 1;
 
@@ -138,7 +144,7 @@ public class BigByteBuffer {
         int offsetEnd = offset(end);
 
         //位于同block的情况
-        if ( blockStart == blockEnd ){
+        if (blockStart == blockEnd) {
             byteBuffers[blockStart].setBytes(src, 0, offsetStart, src.length);
             return;
         }
@@ -150,7 +156,7 @@ public class BigByteBuffer {
         byteBuffers[blockStart].setBytes(src, byteStart, offsetStart, startLen);
         byteStart += startLen;
 
-        for ( int i = blockStart + 1; i <= blockEnd - 1; i++ ){
+        for (int i = blockStart + 1; i <= blockEnd - 1; i++) {
             byteBuffers[i].setBytes(src, byteStart, 0, (int) Constant.G);
             byteStart += Constant.G;
         }
@@ -161,10 +167,11 @@ public class BigByteBuffer {
 
     /**
      * 暂时实现得不可以跨block,未来会支持
+     *
      * @param pos
      * @param directBuffer
      */
-    public void setByteBuffer(long pos, ByteBuffer directBuffer){
+    public void setByteBuffer(long pos, ByteBuffer directBuffer) {
         int block = chectNotCross(pos, directBuffer.remaining());
         int offset = offset(pos);
 
@@ -173,11 +180,12 @@ public class BigByteBuffer {
 
     /**
      * 将一定范围的数据包装进一个ByteBuffer中,不支持跨块
+     *
      * @param pos
      * @param len
      * @return
      */
-    public ByteBuffer wrapInByteBuffer(long pos, int len){
+    public ByteBuffer wrapInByteBuffer(long pos, int len) {
         int blockStart = chectNotCross(pos, len);
         int offsetStart = offset(pos);
 
@@ -187,39 +195,40 @@ public class BigByteBuffer {
 
     /**
      * 校验该范围查询没有跨块
+     *
      * @param start
      * @param len
-     * @return  范围查询数据位于的block编号
+     * @return 范围查询数据位于的block编号
      */
-    private int chectNotCross(long start, int len){
+    private int chectNotCross(long start, int len) {
         long end = start + len - 1;
 
         int blockStart = block(start);
         int blockEnd = block(end);
-        if ( blockStart != blockEnd ){
+        if (blockStart != blockEnd) {
             throw new RuntimeException("该操作不允许跨block");
         }
 
         return blockStart;
     }
 
-    public BigByteBuffer slice(long pos, long len){
+    public BigByteBuffer slice(long pos, long len) {
         return new BigByteBufferView(pos, len);
     }
 
-    public void free(){
+    public void free() {
         for (FastDirectByteBuffer byteBuffer : byteBuffers) {
             byteBuffer.free();
         }
     }
 
 
-    private class BigByteBufferView extends BigByteBuffer{
+    private class BigByteBufferView extends BigByteBuffer {
 
         private long firstBlockLen;
 
 
-        public BigByteBufferView(long start, long len){
+        public BigByteBufferView(long start, long len) {
             super();
             super.size = len;
 
@@ -235,16 +244,16 @@ public class BigByteBuffer {
             FastDirectByteBuffer[] byteBuffers
                     = super.byteBuffers = new FastDirectByteBuffer[blockNum];
 
-                    FastDirectByteBuffer firstBuffer = superByteBuffers[blockStart];
+            FastDirectByteBuffer firstBuffer = superByteBuffers[blockStart];
             this.firstBlockLen = firstBuffer.getSize() - offsetStart;
             byteBuffers[0] = firstBuffer.slice(offsetStart, (int) firstBlockLen);
 
             int i = blockStart + 1;
-            for ( ; i <= blockEnd - 1; i++ ){
+            for (; i <= blockEnd - 1; i++) {
                 byteBuffers[i - blockStart] = superByteBuffers[i];
             }
 
-            if ( blockEnd != blockStart ){
+            if (blockEnd != blockStart) {
                 FastDirectByteBuffer lastBuffer = superByteBuffers[blockEnd];
                 byteBuffers[i - blockStart] = lastBuffer.slice(0, offsetEnd + 1);
             }
@@ -252,7 +261,7 @@ public class BigByteBuffer {
 
         @Override
         protected int block(long pos) {
-            if (pos < firstBlockLen){
+            if (pos < firstBlockLen) {
                 return 0;
             }
             return super.block(pos - firstBlockLen) + 1;
@@ -260,7 +269,7 @@ public class BigByteBuffer {
 
         @Override
         protected int offset(long pos) {
-            if (pos < firstBlockLen){
+            if (pos < firstBlockLen) {
                 return (int) pos;
             }
             return super.offset(pos - firstBlockLen);

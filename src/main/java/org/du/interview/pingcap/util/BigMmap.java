@@ -36,7 +36,7 @@ public class BigMmap {
     public BigMmap(Path path, FileChannel.MapMode mode){
         try {
             this.channel = FileChannel.open(path, StandardOpenOption.WRITE,
-                    StandardOpenOption.READ, StandardOpenOption.CREATE);
+                    StandardOpenOption.READ, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             init(this.channel, mode);
         } catch (IOException e) {
             throw new RuntimeException(e);
