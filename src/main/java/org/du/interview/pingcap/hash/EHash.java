@@ -12,7 +12,7 @@ public class EHash {
         ReadBuffer readBuffer = new ReadBuffer(in);
 
         HashFile hashFile = new HashFile(out,
-                (int) readBuffer.fileRemaining(), recordLen);
+                readBuffer.fileRemaining(), recordLen);
 
         ByteBuffer record;
         while ( (record = readBuffer.nextRecord(recordLen)) != null ){

@@ -188,6 +188,32 @@ item的数据都被hash到了item_hash.dat文件中，按负载因子0.75算的�
 
 
 
+# 运行程序
+
+
+
+可以使用以下方式尝试运行程序：
+
+```shell
+sudo docker build -t pingcap_interview:v1.0 .
+# 使用docker限制程序的运行时资源
+sudo docker run --cpus 4 -m 4g pingcap_interview:v1.0 
+```
+
+
+
+这里使用docker进行资源限制。因为个人笔记本资源有限，这里用就把题目的资源条件改为4核，4G内存，原始数据总计20G(10G的user以及10G的item)。
+
+
+
+因为这里的测评程序会先mock出20G的数据，所以总的测评时间会很长，需要耐心等待。
+
+
+
+耗时：4182142 ms，约69分钟
+
+
+
 # 优化思路
 
 

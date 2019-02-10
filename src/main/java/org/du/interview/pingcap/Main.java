@@ -34,7 +34,7 @@ public class Main {
                         Paths.get(System.getProperty("item")),
                         Paths.get(System.getProperty("out")),
                         Paths.get(System.getProperty("temp")), 16);
-                System.out.println("time used:" + (System.currentTimeMillis() - begin) + " ms");
+                System.out.println("total time used:" + (System.currentTimeMillis() - begin) + " ms");
                 break;
             case "show":
                 Decode.show(Paths.get(System.getProperty("path")));
@@ -63,17 +63,23 @@ public class Main {
         Path userOrderPath = tempDir.resolve(Config.USER_ORDER_FILE);
 
         //外部排序
+        long start = System.currentTimeMillis();
         ESort.sort(user,
                 userOrderPath,
                 tempDir,
                 recordLen, (l1, l2) -> Long.compare(l1, l2));
+        System.out.println("external sort time used:" + (System.currentTimeMillis() - start) + " ms");
 
         //将item表按照item_id进行散列
+        start = System.currentTimeMillis();
         HashFile hashFile = EHash.hash(item, tempDir.resolve(Config.ITEM_HASH_FILE),
                 recordLen);
+        System.out.println("hash time used:" + (System.currentTimeMillis() - start) + " ms");
 
         //按照user_id分组进行求和
+        start = System.currentTimeMillis();
         ESum.sum(userOrderPath, hashFile, out, recordLen);
+        System.out.println("collect time used:" + (System.currentTimeMillis() - start) + " ms");
     }
 
 }
